@@ -1,10 +1,12 @@
-const express = require("express");
 
+const express = require("express");
 const router = express.Router();
 
 const upload = require("../middleware/upload");
+const protectAdmin = require("../middleware/authMiddleware");
 const { uploadImage } = require("../controllers/imageController");
 
-router.post("/", upload.single("image"), uploadImage);
+// Admin-only Image Upload
+router.post("/", protectAdmin, upload.single("image"), uploadImage);
 
 module.exports = router;
