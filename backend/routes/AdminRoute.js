@@ -6,7 +6,7 @@ const {
   loginAdmin,
 } = require("../controllers/AdminController");
 
-// Admin Login
+// Common Login - Admin & Customer
 router.post("/login", loginAdmin);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 
 const Admin = require("../models/Admin");
+const Customer = require("../models/Customer");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -22,20 +23,23 @@ const registerAdmin = async (req, res) => {
       });
     }
 
-    const existingAdmin = await Admin.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
 
-    if (existingAdmin) {
+    const existingAdmin = await Admin.findOne({ email: normalizedEmail });
+    const existingCustomer = await Customer.findOne({ email: normalizedEmail });
+
+    if (existingAdmin || existingCustomer) {
       return res.status(409).json({
         success: false,
-        message: "Admin already exists",
+        message: "This email is already registered",
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const admin = await Admin.create({
-      name,
-      email,
+      name: name.trim(),
+      email: normalizedEmail,
       password: hashedPassword,
     });
 
@@ -49,6 +53,7 @@ const registerAdmin = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Admin registration error:", error);
     res.status(500).json({
       success: false,
       message: "Admin registration failed",
@@ -56,7 +61,7 @@ const registerAdmin = async (req, res) => {
   }
 };
 
-// Admin Login
+// Common Login - Admin and Customer
 const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -68,16 +73,26 @@ const loginAdmin = async (req, res) => {
       });
     }
 
-    const admin = await Admin.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
 
-    if (!admin) {
+    // Check Admin first
+    let account = await Admin.findOne({ email: normalizedEmail });
+    let role = "admin";
+
+    // If not Admin, check Customer
+    if (!account) {
+      account = await Customer.findOne({ email: normalizedEmail });
+      role = "customer";
+    }
+
+    if (!account) {
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    const isMatch = await bcrypt.compare(password, account.password);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -87,7 +102,10 @@ const loginAdmin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: admin._id },
+      {
+        id: account._id,
+        role: role,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -96,16 +114,18 @@ const loginAdmin = async (req, res) => {
       success: true,
       message: "Login successful",
       token,
-      admin: {
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
+      user: {
+        id: account._id,
+        name: account.name,
+        email: account.email,
+        role: role,
       },
     });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({
       success: false,
-      message: "Admin login failed",
+      message: "Login failed",
     });
   }
 };
