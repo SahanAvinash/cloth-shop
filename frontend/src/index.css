@@ -1,17 +1,13 @@
 @import "tailwindcss";
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
 
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f0e8;
-  color: #1c1c1c;
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f0e8;
+    color: #1c1c1c;
+  }
 }
