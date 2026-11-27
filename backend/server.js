@@ -10,6 +10,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const ProductRoutes = require("./routes/ProductRoute");
 const imageRoutes = require("./routes/imageRoutes");
+const adminRoutes = require("./routes/AdminRoute");
 
 // Initialize Express
 const app = express();
@@ -22,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 // API Routes
 app.use("/api/products", ProductRoutes);
 app.use("/api/images", imageRoutes);
-
+app.use("/api/admin", adminRoutes);
 // Home Route
 app.get("/", (req, res) => {
   res.status(200).json({
